@@ -60,8 +60,8 @@ def _ray(point: Point, field: np.ndarray, player: str) -> tuple[int, int, int]:
                     continue
             countLine += isLineEmptyFromEnemies
             if countLine == 2 and isNotEdge and count == 2:
-                Kl += 1
                 Kfl += countAllias
+                Kl += 1
     return (Kfl, Kl, Kel)
 
 
@@ -70,7 +70,7 @@ def _calculateWeight(Kfl: int, Kl: int, Kel: int):
 
 
 def estimate(state: np.ndarray, player: str) -> np.ndarray:
-    weights = np.zeros_like(state)
+    weights = np.zeros_like(state, dtype=int)
 
     for x in range(state.shape[1]):
         for y in range(state.shape[0]):
@@ -81,4 +81,4 @@ def estimate(state: np.ndarray, player: str) -> np.ndarray:
 
     print(weights)
 
-    return weights
+    return weights.astype(int)
