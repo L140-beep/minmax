@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "minmax"
+version = "0.1.0"
+description = ""
+authors = ["L140-beep <kartoshka0302@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.26.2"
+pytest = "^7.4.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
