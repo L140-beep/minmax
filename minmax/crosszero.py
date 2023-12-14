@@ -1,6 +1,6 @@
 import numpy as np
 from pprint import pprint
-
+import random
 from .point import Point
 
 
@@ -17,12 +17,16 @@ class CrossZero():
     def _toggle_player(self) -> None:
         self.current_player = 'O' if self.current_player == 'X' else 'X'
 
-    def _isAvailable(self, point: Point) -> None:
-        if point.x > self.n or point.x < 0 or point.y > self.n or point.y < 0:
-            raise CrossZeroException(
-                f'{point} не входит в рамки ({self.n}, {self.n})!')
+    def _isAvailable(self, point: Point) -> bool:
+        print(point.y, self.n)
+        if point.x >= self.n or point.x < 0 or point.y >= self.n or point.y < 0:
+            return False
+            # raise CrossZeroException(
+            # f'{point} не входит в рамки ({self.n}, {self.n})!')
         if self.field[point.y, point.x] != '':
+            return False
             raise CrossZeroException(f'{point} уже занята!')
+        return True
 
     def _checkWin(self, point: Point) -> bool:
         def reset(point: Point) -> tuple[int, int]:
@@ -66,18 +70,35 @@ class CrossZero():
             return True
         return False
 
-    def move(self, point: Point) -> bool:
-        self._isAvailable(point)
-        self.field[point.y, point.x] = self.current_player
+    def move(self, point: Point) -> bool | None:
+        if self._isAvailable(point):
+            self.field[point.y, point.x] = self.current_player
 
-        if self._checkWin(point):
-            print(f'{self.current_player} победил!')
-            return True
-        self._toggle_player()
-        return False
+            if self._checkWin(point):
+                print(f'{self.current_player} победил!')
+                return True
+            self._toggle_player()
+            return False
+        else:
+            return None
 
     def showField(self):
-        print(self.field)
+        print("  y0, y1, y2")
+        for y in range(self.field.shape[0]):
+            print(f"x{y}", end='')
+            print(self.field[:, y])
+
+    def ai_move(self, f: np.ndarray) -> Point:
+        field = f.copy()
+
+        points = []
+
+        for y in range(field.shape[0]):
+            for x in range(field.shape[1]):
+                if field[y, x] == '':
+                    points.append(Point(x, y))
+
+        return random.choice(points)
 
     def startGame(self):
         self.current_player = 'X'
@@ -85,8 +106,22 @@ class CrossZero():
         win = False
 
         self.showField()
-        while not win:
+        while True:
             print(f'Ход {self.current_player}, введите x, y:')
             x, y = map(int, input().split(','))
             win = self.move(Point(x, y))
+            while win is None:
+                print(
+                    f'Неверный ход! Попробуйте еще раз!\nХод {self.current_player}, введите x, y:')
+                x, y = map(int, input().split(','))
+                win = self.move(Point(x, y))
             self.showField()
+            if win:
+                break
+
+            ai_move = self.ai_move(self.field)
+            print(ai_move)
+            win = self.move(ai_move)
+            self.showField()
+            if win:
+                break
