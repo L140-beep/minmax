@@ -95,41 +95,49 @@ class CrossZero():
             print(f"x{y}", end='')
             print(self.field[y, :])
 
-    # def minmax(self, field: np.ndarray, point: Point, player: str, is_ai_move: bool) -> int:
-    #     move_result = self.move(field, point, player)
-    #     if move_result == 1:
-    #         if player == 'O':
-    #             return WIN_SCORE
-    #         else:
-    #             return LOSE_SCORE
-    #     elif move_result == 0:
-    #         return DRAW_SCORE
-    #     elif move_result is None:
-    #         print(field)
-    #         raise CrossZeroException(f'Неправильный ход {point}')
+    # def minmax(self, depth: int, field: np.ndarray, point: Point, is_ai_moved: bool, alpha: float, beta: float) -> float:
+        # if self._checkWin(point, field):
+        #     if field[point.y, point.x] == 'O':
+        #         # print(field)
+        #         # print('win')
+        #         # print(field)
+        #         return WIN_SCORE / depth
+        #     else:
+        #         # print('lose')
+        #         # print(field)
+        #         # if depth == 1:
+        #         # print("player: ", field[point.y, point.x])
+        #         # print(field)
+        #         return LOSE_SCORE / depth
+        # elif self._checkDraw(field):
+        #     # print('draw')
+        #     # print(field)
+        #     return 0.01 * depth
 
-    #     if is_ai_move:
-    #         best_score = -9999
-    #         for x in range(field.shape[1]):
-    #             for y in range(field.shape[0]):
-    #                 if field[y, x] == '':
-    #                     score = self.minmax(field, point=Point(
-    #                         x, y), is_ai_move=False, player='O')
-    #                     best_score = max(best_score, score)
-    #                     field[y, x] = ''
-    #     else:
-    #         best_score = 9999
-    #         for x in range(field.shape[1]):
-    #             for y in range(field.shape[0]):
-    #                 if field[y, x] == '':
-    #                     score = self.minmax(field, point=Point(
-    #                         x, y), is_ai_move=True, player='X')
-    #                     best_score = min(best_score, score)
-    #                     field[y, x] = ''
+        # if is_ai_moved:
+        #     best_score = -9999.
+        #     for x in range(field.shape[0]):
+        #         for y in range(field.shape[1]):
+        #             if field[y, x] == '':
+        #                 field[y, x] = 'O'
+        #                 score = self.minmax(depth + 1, field, point=Point(
+        #                     x, y), is_ai_moved=False)
+        #                 field[y, x] = ''
+        #                 best_score = max(best_score, score)
+        # else:
+        #     best_score = 9999.
+        #     for x in range(field.shape[0]):
+        #         for y in range(field.shape[1]):
+        #             if field[y, x] == '':
+        #                 field[y, x] = 'X'
+        #                 score = self.minmax(depth + 1, field, point=Point(
+        #                     x, y), is_ai_moved=True)
+        #                 field[y, x] = ''
+        #                 best_score = min(best_score, score)
 
-    #     return best_score
+        # return best_score
 
-    def minmax(self, depth: int, field: np.ndarray, point: Point, is_ai_moved: bool) -> float:
+    def minmax(self, depth: int, field: np.ndarray, point: Point, is_ai_moved: bool, alpha: float, beta: float) -> float:
         if self._checkWin(point, field):
             if field[point.y, point.x] == 'O':
                 # print(field)
@@ -140,16 +148,13 @@ class CrossZero():
                 # print('lose')
                 # print(field)
                 # if depth == 1:
-                    # print("player: ", field[point.y, point.x])
-                    # print(field)
+                # print("player: ", field[point.y, point.x])
+                # print(field)
                 return LOSE_SCORE / depth
         elif self._checkDraw(field):
             # print('draw')
             # print(field)
             return 0.01 * depth
-        # elif move_result is None:
-        #     print(field)
-        #     raise CrossZeroException(f'Неправильный ход {point}')
 
         if is_ai_moved:
             best_score = -9999.
@@ -158,14 +163,12 @@ class CrossZero():
                     if field[y, x] == '':
                         field[y, x] = 'O'
                         score = self.minmax(depth + 1, field, point=Point(
-                            x, y), is_ai_moved=False)
+                            x, y), is_ai_moved=False, alpha=alpha, beta=beta)
                         field[y, x] = ''
                         best_score = max(best_score, score)
-                        # if best_score < score:
-                        #     best_score = score
-                        #     bfield = f
-            # if best_move is not None:
-            #     field[best_move.y, best_move.x] = 'O'
+                        alpha = max(best_score, alpha)
+                        if beta < alpha:
+                            break
         else:
             best_score = 9999.
             for x in range(field.shape[0]):
@@ -173,16 +176,15 @@ class CrossZero():
                     if field[y, x] == '':
                         field[y, x] = 'X'
                         score = self.minmax(depth + 1, field, point=Point(
-                            x, y), is_ai_moved=True)
+                            x, y), is_ai_moved=True, alpha=alpha, beta=beta)
                         field[y, x] = ''
                         best_score = min(best_score, score)
-
-            # if best_move is not None:
-            #     field[best_move.y, best_move.x] = 'X'
+                        beta = min(beta, best_score)
+                        if beta < alpha:
+                            break
         return best_score
 
     def ai_move(self, f: np.ndarray) -> Point | None:
-        move = None
         best_score = -9999.
         field = deepcopy(f)
         moves = []
@@ -191,7 +193,7 @@ class CrossZero():
                 if field[y, x] == '':
                     field[y, x] = 'O'
                     score = self.minmax(1, field, Point(
-                        x, y), False)
+                        x, y), False, alpha=-9999, beta=9999)
                     field[y, x] = ''
                     print(Point(x, y), score)
                     if score > best_score:
@@ -200,21 +202,7 @@ class CrossZero():
                     elif score == best_score:
                         moves.append(Point(x, y))
 
-        # for bfield in fields:
-        #     print(bfield)
-        #     print('---------')
-
         return random.choice(moves)
-        # field = f.copy()
-
-        # points = []
-
-        # for y in range(field.shape[0]):
-        #     for x in range(field.shape[1]):
-        #         if field[y, x] == '':
-        #             points.append(Point(x, y))
-
-        # return random.choice(points)
 
     def startGame(self):
         self.current_player = 'X'
