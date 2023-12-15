@@ -1,6 +1,16 @@
 import numpy as np
 
 from minmax.estimate import estimate
+from minmax.crosszero import CrossZero, Point
+
+
+def test_chech_win():
+    state = np.array([
+        ['', '', ''],
+        ['', 'X', ''],
+        ['O', '', '']])
+
+    assert CrossZero(3)._checkWin(Point(0, 2), state) == False
 
 
 def test_estimate():
