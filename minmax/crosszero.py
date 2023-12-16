@@ -3,7 +3,8 @@ from pprint import pprint
 import random
 from copy import deepcopy
 from .point import Point
-
+from .estimate import estimate
+import time
 
 WIN_SCORE = 10
 LOSE_SCORE = -10
@@ -19,6 +20,7 @@ class CrossZero():
         self.n = N
         self.field = np.zeros((N, N), dtype=str)
         self.current_player = 'X'
+        self.MAX_DEPTH = 2
 
     def _toggle_player(self) -> None:
         self.current_player = 'O' if self.current_player == 'X' else 'X'
@@ -26,10 +28,12 @@ class CrossZero():
     def _isAvailable(self, point: Point, field) -> bool:
         # print(point.y, self.n)
         if point.x >= self.n or point.x < 0 or point.y >= self.n or point.y < 0:
+            print('here')
             return False
             # raise CrossZeroException(
             # f'{point} не входит в рамки ({self.n}, {self.n})!')
         if field[point.y, point.x] != '':
+            print('hereee')
             return False
         return True
 
@@ -90,52 +94,11 @@ class CrossZero():
             return None
 
     def showField(self):
+        # TODO
         print("  y0, y1, y2")
         for y in range(self.field.shape[0]):
             print(f"x{y}", end='')
             print(self.field[y, :])
-
-    # def minmax(self, depth: int, field: np.ndarray, point: Point, is_ai_moved: bool, alpha: float, beta: float) -> float:
-        # if self._checkWin(point, field):
-        #     if field[point.y, point.x] == 'O':
-        #         # print(field)
-        #         # print('win')
-        #         # print(field)
-        #         return WIN_SCORE / depth
-        #     else:
-        #         # print('lose')
-        #         # print(field)
-        #         # if depth == 1:
-        #         # print("player: ", field[point.y, point.x])
-        #         # print(field)
-        #         return LOSE_SCORE / depth
-        # elif self._checkDraw(field):
-        #     # print('draw')
-        #     # print(field)
-        #     return 0.01 * depth
-
-        # if is_ai_moved:
-        #     best_score = -9999.
-        #     for x in range(field.shape[0]):
-        #         for y in range(field.shape[1]):
-        #             if field[y, x] == '':
-        #                 field[y, x] = 'O'
-        #                 score = self.minmax(depth + 1, field, point=Point(
-        #                     x, y), is_ai_moved=False)
-        #                 field[y, x] = ''
-        #                 best_score = max(best_score, score)
-        # else:
-        #     best_score = 9999.
-        #     for x in range(field.shape[0]):
-        #         for y in range(field.shape[1]):
-        #             if field[y, x] == '':
-        #                 field[y, x] = 'X'
-        #                 score = self.minmax(depth + 1, field, point=Point(
-        #                     x, y), is_ai_moved=True)
-        #                 field[y, x] = ''
-        #                 best_score = min(best_score, score)
-
-        # return best_score
 
     def minmax(self, depth: int, field: np.ndarray, point: Point, is_ai_moved: bool, alpha: float, beta: float) -> float:
         if self._checkWin(point, field):
@@ -154,8 +117,9 @@ class CrossZero():
         elif self._checkDraw(field):
             # print('draw')
             # print(field)
-            return 0.01 * depth
-
+            return 0
+        elif depth >= self.MAX_DEPTH:
+            return estimate(field, 'X') * 10 / depth
         if is_ai_moved:
             best_score = -9999.
             for x in range(field.shape[0]):
@@ -185,6 +149,7 @@ class CrossZero():
         return best_score
 
     def ai_move(self, f: np.ndarray) -> Point | None:
+        start = time.time()
         best_score = -9999.
         field = deepcopy(f)
         moves = []
@@ -201,7 +166,7 @@ class CrossZero():
                         moves = [Point(x, y)]
                     elif score == best_score:
                         moves.append(Point(x, y))
-
+        print(f'Время расчета хода: {time.time() - start}')
         return random.choice(moves)
 
     def startGame(self):
@@ -216,7 +181,7 @@ class CrossZero():
             win = self.move(self.field, Point(x, y), self.current_player)
             while win is None:
                 print(
-                    f'Неверный ход! Попробуйте еще раз!\nХод {self.current_player}, введите y, x через запятую:')
+                            f'Неверный ход! Попробуйте еще раз!\nХод {self.current_player}, введите y, x через запятую:')
                 x, y = map(int, input().split(','))
                 win = self.move(self.field, Point(x, y), self.current_player)
             self.showField()
